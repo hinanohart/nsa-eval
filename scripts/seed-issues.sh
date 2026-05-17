@@ -20,6 +20,19 @@ fi
 
 REPO="${REPO:-hinanohart/nsa-eval}"
 
+# Ensure custom labels exist before creating issues. `gh label create` errors if the label
+# already exists, so swallow that case to keep the script idempotent.
+for label_pair in \
+  "mac-contributor:9F61E2:Apple Silicon hardware contributors" \
+  "feature:0E8A16:New functionality" \
+  "infra:5319E7:CI / packaging / docs infra" \
+  "test:1D76DB:Tests and numeric regressions" \
+  "eval:FBCA04:Evaluation matrix cells" \
+  "phase-2:D4C5F9:Phase 2 (month 4-6)"; do
+  IFS=':' read -r lname lcolor ldesc <<<"$label_pair"
+  gh label create "$lname" --repo "$REPO" --color "$lcolor" --description "$ldesc" 2>/dev/null || true
+done
+
 create_issue() {
   local title="$1"
   local label="$2"
