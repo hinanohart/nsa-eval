@@ -1,0 +1,8 @@
+# CODEOWNERS — auto-assigns @hinanohart as reviewer on every PR.
+#
+# Branch protection does NOT currently require code-owner review (solo dev
+# would not be able to approve their own PRs). This file's only effect is to
+# auto-request the maintainer's review when an external contributor opens a PR.
+#
+# Refine into per-area owners once additional maintainers come on board.
+* @hinanohart

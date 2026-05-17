@@ -150,8 +150,12 @@ P1_01=$(gh issue list --repo "$REPO" --state open --search "in:title \"[P1-01]\"
 if [ -z "$P1_01" ]; then
   echo "WARN: P1-01 not found; re-run scripts/seed-issues.sh first."
 else
-  pinned=$(gh issue view "$P1_01" --repo "$REPO" --json isPinned --jq '.isPinned' 2>/dev/null || echo false)
-  if [ "$pinned" = "true" ]; then
+  # GraphQL: the REST `pinned` field on individual issues is unreliable; pinnedIssues
+  # under repository is the source of truth.
+  owner="${REPO%/*}"; name="${REPO#*/}"
+  pinned_numbers=$(gh api graphql -f query="query { repository(owner: \"$owner\", name: \"$name\") { pinnedIssues(first: 5) { nodes { issue { number } } } } }" \
+    --jq '.data.repository.pinnedIssues.nodes[].issue.number' 2>/dev/null || true)
+  if echo "$pinned_numbers" | grep -qx "$P1_01"; then
     echo "OK: P1-01 (#$P1_01) already pinned."
   elif [ "$CHECK" -eq 1 ]; then
     echo "PENDING: P1-01 (#$P1_01) is not pinned."
