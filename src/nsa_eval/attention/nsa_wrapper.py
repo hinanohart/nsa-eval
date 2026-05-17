@@ -34,15 +34,14 @@ class NSACudaBackend:
     def _load(self) -> None:
         if self._impl is not None:
             return
-        try:
-            from native_sparse_attention import NativeSparseAttention
-        except ImportError as e:
-            raise RuntimeError(
-                "fla-org/native-sparse-attention is not installed. "
-                "Vendor it under third_party/ and `uv pip install -e .[nsa_cuda]`, "
-                "or use a different backend (mps, h2o, snapkv, full)."
-            ) from e
-        self._impl = NativeSparseAttention(**self.config.__dict__)
+        # fla-org exposes an HF-style module whose constructor takes a config object, not flat
+        # kwargs. The wiring is intentionally deferred to issue #2 (P1-02) so the smoke test
+        # path is honest about being unimplemented rather than crashing inside vendor code.
+        raise NotImplementedError(
+            "CUDA backend wiring lands in issue #2 (P1-02). The reference impl is vendored "
+            "under third_party/native-sparse-attention; this wrapper still needs to bridge "
+            "the fla-org config and hidden-dim arguments. Use a different backend until then."
+        )
 
     def forward(
         self,
@@ -55,9 +54,8 @@ class NSACudaBackend:
     ) -> torch.Tensor:
         if q.device.type != "cuda":
             raise RuntimeError(f"NSACudaBackend requires CUDA, got {q.device}")
-        self._load()
-        assert self._impl is not None
-        return self._impl(q, k, v, is_causal=is_causal, attention_mask=attention_mask)  # type: ignore[no-any-return,misc]
+        self._load()  # raises NotImplementedError until issue #2 closes
+        raise RuntimeError("unreachable — _load raises")
 
     def supports(self, device: torch.device) -> bool:
         return device.type == "cuda"

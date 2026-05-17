@@ -41,6 +41,9 @@ dev = [
   "ruff>=0.5",
   "mypy>=1.10",
 ]
+# nsa_cuda installs Triton; the fla-org/native-sparse-attention package is not on PyPI and
+# must be vendored under third_party/ (see README and issue P1-02). `uv pip install -e .` plus
+# the submodule init is the supported path.
 nsa_cuda = ["triton>=2.3"]
 bench = ["matplotlib>=3.8", "pandas>=2.2"]
 all = ["nsa-eval[dev,nsa_cuda,bench]"]

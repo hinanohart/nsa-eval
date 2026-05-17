@@ -2,23 +2,42 @@
 
 from __future__ import annotations
 
+import inspect
+
+import pytest
 import torch
 
 from nsa_eval.attention.mps_backend import NSAMPSBackend, NSAMPSConfig
 from nsa_eval.attention.nsa_wrapper import NSAConfig, NSACudaBackend
-from nsa_eval.attention.protocol import AttentionBackend
+from nsa_eval.attention.protocol import AttentionBackend, conforms
 
 
-def test_nsa_cuda_implements_protocol():
+def _has_required_signature(backend: object) -> bool:
+    """`runtime_checkable` Protocol only checks attribute names; verify the actual signature
+    so a backend with the wrong `forward` arguments cannot pass silently."""
+    sig = inspect.signature(backend.forward)
+    params = sig.parameters
+    return (
+        "q" in params
+        and "k" in params
+        and "v" in params
+        and "is_causal" in params
+        and "attention_mask" in params
+    )
+
+
+def test_nsa_cuda_conforms_to_protocol():
     backend = NSACudaBackend()
-    assert isinstance(backend, AttentionBackend)
+    assert conforms(backend)
+    assert _has_required_signature(backend)
     assert backend.name == "nsa_cuda"
     assert "cuda" in backend.supports_devices
 
 
-def test_nsa_mps_implements_protocol():
+def test_nsa_mps_conforms_to_protocol():
     backend = NSAMPSBackend()
-    assert isinstance(backend, AttentionBackend)
+    assert conforms(backend)
+    assert _has_required_signature(backend)
     assert backend.name == "nsa_mps"
     assert "mps" in backend.supports_devices
 
@@ -47,7 +66,28 @@ def test_nsa_mps_cpu_smoke(small_qkv):
 def test_nsa_cuda_requires_cuda(small_qkv):
     backend = NSACudaBackend()
     q, k, v = small_qkv
-    import pytest
-
     with pytest.raises(RuntimeError, match="requires CUDA"):
         backend.forward(q, k, v, is_causal=True)
+
+
+def test_protocol_isinstance_is_known_weak():
+    """Documenting Protocol isinstance limitations so future readers don't trust it.
+
+    PEP-544 `runtime_checkable` checks attribute presence only. Add a regression for the
+    common foot-gun: an object with the right attribute names but wrong types passes
+    `isinstance` but is not a real backend.
+    """
+
+    class FakeBackend:
+        name = "fake"
+        supports_devices: tuple[str, ...] = ()
+
+        def forward(self):  # wrong signature, no q/k/v
+            return None
+
+        def supports(self, device):
+            return False
+
+    backend = FakeBackend()
+    assert isinstance(backend, AttentionBackend)  # the weak check still passes
+    assert not _has_required_signature(backend)  # the strong check catches it

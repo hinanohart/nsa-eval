@@ -2,7 +2,7 @@
 
 Apple Silicon (MPS) native Native Sparse Attention (NSA) reference implementation + unified long-context evaluation suite.
 
-The first OSS that lets you run NSA on a Mac, and a cross-device (CUDA / MPS / CPU) benchmark runner with reproducible Kaggle notebooks. The project is run with minimum human intervention through v0.1: a weekly Claude Code Routine drives the issue board, and a Mac contributor is needed only for MPS validation.
+A vanilla-PyTorch NSA reference written to dispatch onto Metal kernels on Apple Silicon, alongside a cross-device (CUDA / MPS / CPU) benchmark runner with reproducible Kaggle notebooks. To the maintainer's knowledge there is no other OSS NSA implementation that targets MPS as a first-class device — please open an issue if you find a counterexample. The project is run with minimum human intervention through v0.1: a weekly Claude Code Routine drives the issue board, and a Mac contributor is needed only for MPS validation.
 
 ## Why
 
@@ -23,7 +23,7 @@ The first OSS that lets you run NSA on a Mac, and a cross-device (CUDA / MPS / C
 | 4 | Tech report v0.1 published as a GitHub release (Markdown) |
 | 5 | Static benchmark dataset + reference script published on Hugging Face Datasets |
 | 6 | Kaggle notebook public and reproducible end-to-end |
-| 7 | README states "minimum human intervention through v0.1" and "first OSS to run NSA on Mac" |
+| 7 | README documents the MPS path honestly: "minimum human intervention through v0.1" + maintainer-known absence of another MPS NSA OSS (counterexamples invited) |
 | 8 | `experiments/_wip/` contains the failed cells, not deleted |
 
 ## Quick start (Kaggle T4)

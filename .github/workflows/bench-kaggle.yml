@@ -9,7 +9,9 @@ name: bench-kaggle
 
 on:
   schedule:
-    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+    # Tuesday 07:00 UTC. Deliberately offset from leaderboard-update (Mon 06:00) so two cron
+    # workflows don't race for the same minute slot.
+    - cron: '0 7 * * 2'
   workflow_dispatch:
     inputs:
       notebook:
@@ -40,9 +42,21 @@ jobs:
           printf '{"username":"%s","key":"%s"}\n' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
       - name: Push notebook
+        env:
+          NOTEBOOK_PATH: ${{ inputs.notebook || 'notebooks/_template_kaggle.ipynb' }}
         run: |
-          NOTEBOOK="${{ inputs.notebook || 'notebooks/_template_kaggle.ipynb' }}"
-          mkdir -p .kaggle-push
-          cp "$NOTEBOOK" .kaggle-push/kernel-metadata.json || true
-          # Real push lands when kernel-metadata.json is wired up in week 1.
-          echo "Kaggle push step is a placeholder until kernel-metadata.json is committed."
+          # KAGGLE_ENABLED is true at this point (`if:` above gated the job), so a missing
+          # kernel-metadata.json is now an honest failure rather than a silent no-op.
+          if [ ! -f notebooks/kernel-metadata.json ]; then
+            echo "::error::KAGGLE_ENABLED=true but notebooks/kernel-metadata.json does not exist."
+            echo "Wire it up (issue P1-10) before flipping the variable."
+            exit 1
+          fi
+          if [ ! -f "$NOTEBOOK_PATH" ]; then
+            echo "::error::notebook not found at $NOTEBOOK_PATH"
+            exit 1
+          fi
+          STAGE="$(mktemp -d)"
+          cp notebooks/kernel-metadata.json "$STAGE/"
+          cp "$NOTEBOOK_PATH" "$STAGE/"
+          kaggle kernels push -p "$STAGE"

@@ -22,7 +22,9 @@ class H2OBackend:
     """H2O — heavy-hitter + recent window KV retention. arXiv 2306.14048."""
 
     name = "h2o"
-    supports_devices: tuple[str, ...] = ("cuda", "mps", "cpu")
+    # Empty tuple until the integration lands (week 4); `supports()` returning True for a
+    # backend whose `forward` raises is a worse lie than refusing to claim support at all.
+    supports_devices: tuple[str, ...] = ()
 
     def __init__(self, config: H2OConfig | None = None) -> None:
         self.config = config or H2OConfig()
@@ -39,7 +41,7 @@ class H2OBackend:
         raise NotImplementedError("H2O baseline integration lands in week 4")
 
     def supports(self, device: torch.device) -> bool:
-        return device.type in self.supports_devices
+        return False
 
 
 @dataclass
@@ -52,7 +54,7 @@ class SnapKVBackend:
     """SnapKV — observation-window guided KV selection. arXiv 2404.14469."""
 
     name = "snapkv"
-    supports_devices: tuple[str, ...] = ("cuda", "mps", "cpu")
+    supports_devices: tuple[str, ...] = ()
 
     def __init__(self, config: SnapKVConfig | None = None) -> None:
         self.config = config or SnapKVConfig()
@@ -69,4 +71,4 @@ class SnapKVBackend:
         raise NotImplementedError("SnapKV baseline integration lands in week 4")
 
     def supports(self, device: torch.device) -> bool:
-        return device.type in self.supports_devices
+        return False

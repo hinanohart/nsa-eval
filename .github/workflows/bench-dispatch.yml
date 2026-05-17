@@ -19,25 +19,32 @@ on:
         default: 'cpu'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
       - name: Install project
         run: |
           uv venv
           source .venv/bin/activate
           uv pip install -e ".[dev,bench]"
       - name: Run eval cell
+        env:
+          # `inputs.*` is empty on scheduled cron triggers; fall back to the default config so
+          # the scheduled run is meaningful instead of invoking `--config ` with no value.
+          CONFIG_PATH: ${{ inputs.config || 'configs/config.yaml' }}
         run: |
           source .venv/bin/activate
-          nsa-eval run --config ${{ inputs.config }}
+          nsa-eval run --config "$CONFIG_PATH"
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:

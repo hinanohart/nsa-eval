@@ -35,13 +35,23 @@ class MorphKVDecode:
         v_cache: torch.Tensor,
         importance: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        if k_cache.shape != v_cache.shape:
+            raise ValueError(
+                f"k_cache and v_cache must share shape; got {k_cache.shape} vs {v_cache.shape}"
+            )
+        if importance.shape != k_cache.shape[:-1]:
+            raise ValueError(
+                f"importance must have shape {k_cache.shape[:-1]} (cache minus dh); "
+                f"got {importance.shape}"
+            )
         cached_len = k_cache.shape[-2]
         if cached_len <= self.config.budget:
             return k_cache, v_cache
         recency = torch.linspace(0, 1, cached_len, device=k_cache.device)
-        score = (
-            1 - self.config.recency_weight
-        ) * importance + self.config.recency_weight * recency.broadcast_to(importance.shape)
+        score = (1 - self.config.recency_weight) * importance + (
+            self.config.recency_weight * recency.broadcast_to(importance.shape)
+        )
         keep = score.topk(self.config.budget, dim=-1).indices.sort(dim=-1).values
-        keep_idx = keep.unsqueeze(-1).expand(-1, -1, -1, k_cache.shape[-1])
+        # Insert a trailing singleton dim for dh, then expand to whatever shape k_cache has.
+        keep_idx = keep.unsqueeze(-1).expand(*keep.shape, k_cache.shape[-1])
         return torch.gather(k_cache, -2, keep_idx), torch.gather(v_cache, -2, keep_idx)

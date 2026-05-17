@@ -39,7 +39,7 @@ def main() -> None:
 )
 def run(config_path: Path, results_root: Path) -> None:
     """Run one eval cell described by a YAML config."""
-    cfg = RunConfig.model_validate(yaml.safe_load(config_path.read_text()))
+    cfg = RunConfig.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")))
     spec = EvalSpec(
         model=cfg.model.name,
         benchmark=cfg.benchmark.name,
@@ -54,11 +54,11 @@ def run(config_path: Path, results_root: Path) -> None:
 @main.command("list-backends")
 def list_backends() -> None:
     """List registered attention backends and benchmarks."""
-    from .eval.runner import _ATTENTION_REGISTRY, _BENCHMARK_REGISTRY
+    from .eval.runner import registered_attentions, registered_benchmarks
 
     click.echo("attention:")
-    for name in sorted(_ATTENTION_REGISTRY):
+    for name in registered_attentions():
         click.echo(f"  - {name}")
     click.echo("benchmark:")
-    for name in sorted(_BENCHMARK_REGISTRY):
+    for name in registered_benchmarks():
         click.echo(f"  - {name}")

@@ -10,12 +10,19 @@ on:
     - cron: '0 6 * * 1'  # Monday 06:00 UTC
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   update:
+    # Two gates so a single misconfigured variable cannot ship the leaderboard before its
+    # Phase 3 readiness review: explicit LEADERBOARD_ENABLED variable and the job body refuses
+    # to claim success until the implementation lands.
     if: ${{ vars.LEADERBOARD_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "leaderboard update job — implementation lands in Phase 3"
+      - name: Refuse to no-op
+        run: |
+          echo "::error::leaderboard-update has no implementation yet (Phase 3, month 7-9)."
+          echo "If you intended to publish a leaderboard, finish the implementation first."
+          exit 1

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import date
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ..utils.manifest import build_manifest
@@ -28,9 +28,19 @@ def register_benchmark(name: str, factory: Callable[[], object]) -> None:
     _BENCHMARK_REGISTRY[name] = factory
 
 
+def registered_attentions() -> list[str]:
+    return sorted(_ATTENTION_REGISTRY)
+
+
+def registered_benchmarks() -> list[str]:
+    return sorted(_BENCHMARK_REGISTRY)
+
+
 class BenchmarkRunner:
     def __init__(self, results_root: Path | str = "benchmarks/results") -> None:
-        self.results_root = Path(results_root)
+        # Resolve relative paths against the caller's cwd at construction time so a later
+        # `chdir` in user code doesn't move our output tree.
+        self.results_root = Path(results_root).resolve()
 
     def run(self, spec: EvalSpec) -> Path:
         set_global_seed(spec.seed)
@@ -39,11 +49,11 @@ class BenchmarkRunner:
         if attention_factory is None:
             raise KeyError(
                 f"unknown attention backend: {spec.attention}; "
-                f"registered: {sorted(_ATTENTION_REGISTRY)}"
+                f"registered: {registered_attentions()}"
             )
         if benchmark_factory is None:
             raise KeyError(
-                f"unknown benchmark: {spec.benchmark}; registered: {sorted(_BENCHMARK_REGISTRY)}"
+                f"unknown benchmark: {spec.benchmark}; registered: {registered_benchmarks()}"
             )
         attention = attention_factory()
         benchmark = benchmark_factory()
@@ -53,7 +63,14 @@ class BenchmarkRunner:
             "attention_name": getattr(attention, "name", spec.attention),
             "benchmark_name": getattr(benchmark, "name", spec.benchmark),
         }
-        out_dir = self.results_root / date.today().isoformat()
+        # Scaffold-only results go to a sibling tree so they cannot pollute the real result
+        # series that downstream tools (leaderboard, paper figures) will glob.
+        bucket = (
+            "_scaffold"
+            if result["status"] == "scaffold_only"
+            else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        )
+        out_dir = self.results_root / bucket
         out_dir.mkdir(parents=True, exist_ok=True)
         out = out_dir / f"{spec.slug()}.json"
         out.write_text(

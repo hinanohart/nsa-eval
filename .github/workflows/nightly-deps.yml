@@ -20,7 +20,9 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install -e ".[dev]"
-          uv lock --upgrade || true
+          # No `|| true`: a real upgrade failure should surface as a red workflow so the
+          # maintainer notices, rather than silently producing an empty PR.
+          uv lock --upgrade
       - name: Open PR with changes
         uses: peter-evans/create-pull-request@v6
         with:
