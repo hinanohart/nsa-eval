@@ -1,0 +1,27 @@
+name: preprint-rebuild
+
+on:
+  push:
+    paths:
+      - 'papers/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+      - name: Render tech report
+        run: |
+          mkdir -p papers/_build
+          pandoc papers/tech_report_v0_1.md -o papers/_build/tech_report_v0_1.pdf || \
+            pandoc papers/tech_report_v0_1.md -o papers/_build/tech_report_v0_1.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tech-report-${{ github.run_id }}
+          path: papers/_build/*

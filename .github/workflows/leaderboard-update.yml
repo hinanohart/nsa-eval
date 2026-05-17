@@ -1,0 +1,21 @@
+name: leaderboard-update
+
+# Phase 3 placeholder — wires benchmark JSON results into a leaderboard table.
+# Disabled by default; turn on via the LEADERBOARD_ENABLED repo variable when the
+# HF Spaces leaderboard is provisioned (Phase 3, month 7-9).
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: ${{ vars.LEADERBOARD_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "leaderboard update job — implementation lands in Phase 3"

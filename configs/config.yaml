@@ -1,0 +1,16 @@
+# Default top-level run config — copy and edit, or pass --config to override.
+model:
+  name: qwen25_0_5b
+  hf_id: Qwen/Qwen2.5-0.5B
+  dtype: bfloat16
+  trust_remote_code: false
+benchmark:
+  name: niah
+  seqlens: [2048, 4096, 8192]
+attention:
+  name: nsa_mps
+  params: {}
+device:
+  name: mps
+  fallback: [cpu]
+seed: 0

@@ -1,0 +1,4 @@
+name: qwen25_0_5b
+hf_id: Qwen/Qwen2.5-0.5B
+dtype: bfloat16
+trust_remote_code: false

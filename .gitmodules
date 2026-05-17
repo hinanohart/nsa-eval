@@ -1,0 +1,5 @@
+[submodule "third_party/native-sparse-attention"]
+	path = third_party/native-sparse-attention
+	url = https://github.com/fla-org/native-sparse-attention.git
+	branch = main
+	shallow = true

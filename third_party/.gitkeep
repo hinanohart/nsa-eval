@@ -1,0 +1,3 @@
+# third_party/ — vendored upstream code (e.g. fla-org/native-sparse-attention).
+# Populated by `scripts/vendor.sh` (lands in week 1). Do not commit the vendored sources
+# directly; commit only the submodule pointer or a pinned download manifest.

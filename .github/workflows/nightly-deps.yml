@@ -1,0 +1,31 @@
+name: nightly-deps
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Upgrade lockfile
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
+          uv lock --upgrade || true
+      - name: Open PR with changes
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(deps): nightly lockfile upgrade"
+          title: "chore(deps): nightly lockfile upgrade"
+          body: "Automated lockfile upgrade. Review CI before merging."
+          branch: nightly-deps
+          delete-branch: true

@@ -1,0 +1,7 @@
+name: nsa_mps
+params:
+  compression_block_size: 32
+  compression_stride: 16
+  selection_block_size: 64
+  selection_top_n: 16
+  sliding_window: 512

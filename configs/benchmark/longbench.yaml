@@ -1,0 +1,3 @@
+name: longbench
+seqlens: [8192, 16384, 32768]
+subset: en_single_doc

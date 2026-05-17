@@ -1,0 +1,4 @@
+name: morphkv
+params:
+  budget: 1024
+  recency_weight: 0.5

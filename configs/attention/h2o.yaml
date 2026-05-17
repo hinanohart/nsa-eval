@@ -1,0 +1,4 @@
+name: h2o
+params:
+  heavy_budget: 512
+  recent_budget: 512

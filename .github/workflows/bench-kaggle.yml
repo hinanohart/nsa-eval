@@ -1,0 +1,48 @@
+name: bench-kaggle
+
+# Publishes the latest config + scaffold as a Kaggle Notebook so external users can reproduce
+# the CUDA / TPU paths without provisioning hardware. Triggered weekly; manual dispatch
+# available for ad-hoc pushes.
+#
+# Requires repo secrets KAGGLE_USERNAME and KAGGLE_KEY (gate A'). Until they are set, the
+# workflow is a no-op.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      notebook:
+        description: 'Path to the notebook to push (default: notebooks/_template_kaggle.ipynb)'
+        required: false
+        default: 'notebooks/_template_kaggle.ipynb'
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    if: ${{ vars.KAGGLE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install kaggle CLI
+        run: pip install --quiet kaggle
+      - name: Configure Kaggle credentials
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          mkdir -p ~/.kaggle
+          printf '{"username":"%s","key":"%s"}\n' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+      - name: Push notebook
+        run: |
+          NOTEBOOK="${{ inputs.notebook || 'notebooks/_template_kaggle.ipynb' }}"
+          mkdir -p .kaggle-push
+          cp "$NOTEBOOK" .kaggle-push/kernel-metadata.json || true
+          # Real push lands when kernel-metadata.json is wired up in week 1.
+          echo "Kaggle push step is a placeholder until kernel-metadata.json is committed."

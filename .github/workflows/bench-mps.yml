@@ -1,0 +1,38 @@
+name: bench-mps
+
+on:
+  schedule:
+    # Per design memo §F: Tuesday and Thursday 18:00 UTC.
+    - cron: '0 18 * * 2,4'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mps:
+    # Requires a self-hosted runner with `mps` label on an Apple Silicon Mac.
+    # Until a Mac contributor provisions one, this job is skipped on the public runner pool.
+    runs-on: [self-hosted, macOS, ARM64, mps]
+    if: ${{ vars.HAVE_MPS_RUNNER == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install project (MPS-targeting)
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install -e ".[dev,bench]"
+      - name: Run MPS smoke (NIAH 2k)
+        run: |
+          source .venv/bin/activate
+          nsa-eval run --config configs/config.yaml
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-mps-${{ github.run_id }}
+          path: benchmarks/results/**/*.json

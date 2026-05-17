@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nsa-eval"
+version = "0.0.1"
+description = "MPS-native Native Sparse Attention reference + unified long-context evaluation suite"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "hinanohart"}]
+keywords = ["attention", "sparse-attention", "nsa", "long-context", "evaluation", "mps", "apple-silicon"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "torch>=2.3",
+  "transformers>=4.45",
+  "datasets>=2.20",
+  "numpy>=1.26",
+  "tqdm>=4.66",
+  "pyyaml>=6.0",
+  "pydantic>=2.7",
+  "click>=8.1",
+  "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+]
+nsa_cuda = ["triton>=2.3"]
+bench = ["matplotlib>=3.8", "pandas>=2.2"]
+all = ["nsa-eval[dev,nsa_cuda,bench]"]
+
+[project.scripts]
+nsa-eval = "nsa_eval.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/hinanohart/nsa-eval"
+Repository = "https://github.com/hinanohart/nsa-eval"
+Issues = "https://github.com/hinanohart/nsa-eval/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nsa_eval"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["notebooks", "third_party"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "slow: tests that take more than a few seconds",
+  "cuda: tests that require a CUDA device",
+  "mps: tests that require an Apple Silicon MPS device",
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["transformers.*", "datasets.*", "triton.*"]
+ignore_missing_imports = true
