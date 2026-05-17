@@ -55,7 +55,6 @@ class NSACudaBackend:
         if q.device.type != "cuda":
             raise RuntimeError(f"NSACudaBackend requires CUDA, got {q.device}")
         self._load()  # raises NotImplementedError until issue #2 closes
-        raise RuntimeError("unreachable — _load raises")
 
     def supports(self, device: torch.device) -> bool:
         return device.type == "cuda"

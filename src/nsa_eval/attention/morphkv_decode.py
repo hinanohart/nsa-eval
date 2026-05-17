@@ -41,8 +41,9 @@ class MorphKVDecode:
             )
         if importance.shape != k_cache.shape[:-1]:
             raise ValueError(
-                f"importance must have shape {k_cache.shape[:-1]} (cache minus dh); "
-                f"got {importance.shape}"
+                "importance must broadcast to k_cache's leading dims (everything except the "
+                f"head-dim axis): expected shape {tuple(k_cache.shape[:-1])}, "
+                f"got {tuple(importance.shape)}"
             )
         cached_len = k_cache.shape[-2]
         if cached_len <= self.config.budget:

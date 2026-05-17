@@ -38,11 +38,20 @@ def conforms(obj: object) -> bool:
     """Stronger check than `isinstance(_, AttentionBackend)`.
 
     `runtime_checkable` Protocol only verifies attribute presence (PEP-544); a class with the
-    right attributes but wrong method signatures still passes `isinstance`. This helper at
-    least asserts that `forward` and `supports` are callable on the candidate.
+    right attributes but wrong method signatures still passes `isinstance`. This helper
+    additionally verifies the `forward` method signature has the expected parameter names.
     """
-    return (
-        isinstance(obj, AttentionBackend)
-        and callable(getattr(obj, "forward", None))
-        and callable(getattr(obj, "supports", None))
-    )
+    import inspect
+
+    if not isinstance(obj, AttentionBackend):
+        return False
+    forward = getattr(obj, "forward", None)
+    supports = getattr(obj, "supports", None)
+    if not (callable(forward) and callable(supports)):
+        return False
+    try:
+        params = inspect.signature(forward).parameters
+    except (TypeError, ValueError):
+        return False
+    required = {"q", "k", "v", "is_causal", "attention_mask"}
+    return required.issubset(params)
