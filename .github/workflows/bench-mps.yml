@@ -36,7 +36,7 @@ jobs:
           source .venv/bin/activate
           nsa-eval run --config configs/config.yaml
       - name: Upload result
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bench-mps-${{ github.run_id }}
           path: benchmarks/results/**/*.json
