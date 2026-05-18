@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "MPS-native Native Sparse Attention reference implementation + unified long-context benchmark suite"
+authors:
+  - family-names: "Hart"
+    given-names: "Hinano"
+    alias: "hinanohart"
+type: software
+license: "NOASSERTION"
+repository-code: "https://github.com/hinanohart/nsa-eval"
+url: "https://github.com/hinanohart/nsa-eval"
+version: "0.0.1"
+date-released: "2026-05-17"
+keywords:
+  - "apple-silicon"
+  - "benchmark"
+  - "deepseek"
+  - "long-context"
+  - "mps"
+  - "pytorch"
+  - "ruler"
+  - "sparse-attention"

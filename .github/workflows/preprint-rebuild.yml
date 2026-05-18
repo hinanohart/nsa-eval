@@ -21,7 +21,7 @@ jobs:
           mkdir -p papers/_build
           pandoc papers/tech_report_v0_1.md -o papers/_build/tech_report_v0_1.pdf || \
             pandoc papers/tech_report_v0_1.md -o papers/_build/tech_report_v0_1.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tech-report-${{ github.run_id }}
           path: papers/_build/*
