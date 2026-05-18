@@ -1,5 +1,8 @@
 # nsa-eval
 
+[![CI](https://github.com/hinanohart/nsa-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/hinanohart/nsa-eval/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+
 Apple Silicon (MPS) native Native Sparse Attention (NSA) reference implementation + unified long-context evaluation suite.
 
 A vanilla-PyTorch NSA reference written to dispatch onto Metal kernels on Apple Silicon, alongside a cross-device (CUDA / MPS / CPU) benchmark runner with reproducible Kaggle notebooks. To the maintainer's knowledge there is no other OSS NSA implementation that targets MPS as a first-class device — please open an issue if you find a counterexample. The project is run with minimum human intervention through v0.1: a weekly Claude Code Routine drives the issue board, and a Mac contributor is needed only for MPS validation.
