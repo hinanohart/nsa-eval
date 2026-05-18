@@ -150,8 +150,12 @@ P1_01=$(gh issue list --repo "$REPO" --state open --search "in:title \"[P1-01]\"
 if [ -z "$P1_01" ]; then
   echo "WARN: P1-01 not found; re-run scripts/seed-issues.sh first."
 else
-  pinned=$(gh issue view "$P1_01" --repo "$REPO" --json isPinned --jq '.isPinned' 2>/dev/null || echo false)
-  if [ "$pinned" = "true" ]; then
+  # GraphQL: the REST `pinned` field on individual issues is unreliable; pinnedIssues
+  # under repository is the source of truth.
+  owner="${REPO%/*}"; name="${REPO#*/}"
+  pinned_numbers=$(gh api graphql -f query="query { repository(owner: \"$owner\", name: \"$name\") { pinnedIssues(first: 5) { nodes { issue { number } } } } }" \
+    --jq '.data.repository.pinnedIssues.nodes[].issue.number' 2>/dev/null || true)
+  if echo "$pinned_numbers" | grep -qx "$P1_01"; then
     echo "OK: P1-01 (#$P1_01) already pinned."
   elif [ "$CHECK" -eq 1 ]; then
     echo "PENDING: P1-01 (#$P1_01) is not pinned."
@@ -167,8 +171,33 @@ if [ "$CHECK" -eq 0 ] && confirm "Enable GitHub Discussions on the repo (recruit
     && echo "OK: Discussions enabled."
 fi
 
-# --- 6. final status -----------------------------------------------------------------------
-section "6. status"
+# --- 6. open PRs awaiting maintainer judgment ----------------------------------------------
+# These are bot-opened PRs. Each is CI-green; the call to merge or hold is the maintainer's.
+# We never auto-merge here because major version bumps can break non-CI workflows
+# (bench-mps, bench-kaggle, preprint-rebuild) that CI never exercises.
+section "6. open PRs (bot-opened, CI-checked)"
+gh pr list --repo "$REPO" --state open \
+  --json number,title,statusCheckRollup \
+  --jq '.[] | "  #\(.number) \(.title)  [\(.statusCheckRollup | map(.conclusion // .status) | join(","))]"' \
+  | sort
+echo
+echo "Merge with: gh pr merge <number> --squash --repo $REPO"
+echo "Hold:       gh pr close <number> --repo $REPO --comment \"reason\""
+
+# --- 7. MEMORY.md append snippet (Claude cannot Edit MEMORY.md directly) -------------------
+# The maintainer's auto-memory MEMORY.md has Edit denied to Claude. Print the two-line
+# append text here so the maintainer can paste it once.
+section "7. MEMORY.md append (manual paste)"
+cat <<'MEMORY_APPEND'
+Append the following two lines to ~/.claude/projects/-home-runza/memory/MEMORY.md
+(Claude cannot Edit this file due to permission policy):
+
+- [nsa-day0-round3-audit-2026-05-17.md](nsa-day0-round3-audit-2026-05-17.md) — R14 round-3 audit + fix loop: 6 correctness blockers fixed in mps_backend, CI gates hardened, milestones created. Critic APPROVE.
+- [nsa-github-hardening-2026-05-18.md](nsa-github-hardening-2026-05-18.md) — Day-1 GitHub hardening: main protection, release-please bootstrap, Actions PR permission, dependabot, SECURITY.md, finish-setup.sh GraphQL fix.
+MEMORY_APPEND
+
+# --- 8. final status -----------------------------------------------------------------------
+section "8. status"
 gh api "repos/$REPO/milestones" --jq '.[] | "milestone \(.title): \(.open_issues) open / \(.closed_issues) closed"'
 echo
 gh run list --repo "$REPO" --limit 3 \
