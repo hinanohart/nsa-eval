@@ -11,6 +11,6 @@ attention:
   name: nsa_mps
   params: {}
 device:
-  name: mps
-  fallback: [cpu]
+  name: cpu
+  fallback: []
 seed: 0

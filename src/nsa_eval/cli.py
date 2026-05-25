@@ -9,6 +9,9 @@ from pathlib import Path
 import click
 import yaml
 
+import nsa_eval.attention  # noqa: F401 — side-effect: registers attention backends
+import nsa_eval.eval.benchmarks  # noqa: F401 — side-effect: registers benchmarks
+
 from .config.schema import RunConfig
 from .eval.runner import BenchmarkRunner
 from .eval.spec import EvalSpec
