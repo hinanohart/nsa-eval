@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nsa-eval"
-version = "0.0.2"
+version = "0.0.3"
 description = "MPS-native Native Sparse Attention reference + unified long-context evaluation suite"
 readme = "README.md"
 requires-python = ">=3.10"
